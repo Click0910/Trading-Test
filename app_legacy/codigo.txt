@@ -1,0 +1,70 @@
+from tradingview_ta import TA_Handler, Interval, Exchange
+from datetime import datetime
+
+'''
+symbol: EURUSD
+Exchange:
+Screener:
+
+Symbol: Gold
+
+
+'''
+
+
+def get_analysis(option: str):
+
+    analysis = []
+
+    intervals = [
+        (Interval.INTERVAL_30_MINUTES, "30 Minutes"),
+        (Interval.INTERVAL_1_HOUR, "1 Hour"),
+        (Interval.INTERVAL_4_HOURS, "4 Hours"),
+        (Interval.INTERVAL_1_DAY, "1 Day"),
+    ]
+
+    recommendations = []
+
+    for interval, interval_name in intervals:
+        usd_eur = TA_Handler(
+            symbol=option,
+            screener="forex",
+            exchange="FX_IDC",
+            interval=interval
+        )
+
+        tech_analysis = usd_eur.get_analysis().summary
+        indicators = usd_eur.get_indicators()
+        tech_analysis["indicators"] = indicators
+        tech_analysis["success"] = "no data"
+        current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        tech_analysis["timestamp"] = current_datetime
+
+        recommendation = tech_analysis["RECOMMENDATION"]
+        recommendations.append((interval_name, recommendation))
+
+    for interval_name, recommendation in recommendations:
+        print(f"{interval_name}: {recommendation}")
+
+    # Verificar si hay al menos 4 intervalos con recomendaciones de "SELL" o "STRONG SELL"
+    sell_count = recommendations.count(("30 Minutes", "SELL")) + recommendations.count(
+        ("1 Hour", "SELL")) + recommendations.count(("4 Hours", "SELL")) + recommendations.count(
+        ("1 Day", "SELL")) + recommendations.count(("30 Minutes", "STRONG_SELL")) + recommendations.count(
+    ("1 Hour", "STRONG_SELL")) + recommendations.count(("4 Hours", "STRONG_SELL")) + recommendations.count(
+    ("1 Day", "STRONG_SELL"))
+    # Verificar si hay al menos 4 intervalos con recomendaciones de "BUY" o "STRONG BUY"
+    buy_count = recommendations.count(("30 Minutes", "BUY")) + recommendations.count(
+        ("1 Hour", "BUY")) + recommendations.count(("4 Hours", "BUY")) + recommendations.count(
+        ("1 Day", "BUY")) + recommendations.count(("30 Minutes", "STRONG_BUY")) + recommendations.count(
+    ("1 Hour", "STRONG_BUY")) + recommendations.count(("4 Hours", "STRONG_BUY")) + recommendations.count(
+    ("1 Day", "STRONG_BUY"))
+
+    if sell_count >= 4:
+        return "SELL"
+    elif buy_count >= 4:
+        return "BUY"
+    else:
+        return "It's not the right moment to make any movement"
+
+
+print(get_analysis("EURJPY"))
